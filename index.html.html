@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit Card Knowledge Base 2026</title>
+<style>
+  :root {
+    --bg: #0c0e14;
+    --surface: #13151f;
+    --surface2: #1c1f2e;
+    --surface3: #23273a;
+    --border: #2a2d42;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --text: #e8eaf6;
+    --text-muted: #7a81a8;
+    --gold: #f4c430;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f97316;
+    --purple: #a855f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(180deg, #13151f 0%, #0c0e14 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px 28px;
+  }
+  .header-inner { max-width: 1360px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+  .header-text h1 { font-size: 1.85rem; font-weight: 800; letter-spacing: -0.02em; }
+  .header-text h1 span { background: linear-gradient(90deg, #6c63ff, #00d4aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .header-text p { font-size: 0.88rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5; max-width: 480px; }
+  .header-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .updated-badge { background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3); color: #a8a3ff; font-size: 0.75rem; padding: 5px 12px; border-radius: 20px; font-weight: 500; }
+  .card-count { font-size: 0.78rem; color: var(--text-muted); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 48px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .controls-inner { max-width: 1360px; margin: 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search-wrap { position: relative; width: 260px; flex-shrink: 0; }
+  .search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; flex-shrink: 0; }
+  #search { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px 8px 36px; border-radius: 8px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
+  #search::placeholder { color: var(--text-muted); }
+  #search:focus { border-color: var(--accent); }
+
+  .divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+  /* Use-case filter pills */
+  .filter-scroll { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+  .pill { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 7px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; user-select: none; }
+  .pill:hover { border-color: var(--accent); color: var(--text); }
+  .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+  .sort-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .sort-wrap label { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+  #sort { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 7px 10px; border-radius: 8px; font-size: 0.8rem; outline: none; cursor: pointer; }
+
+  /* ── RESULT COUNT ── */
+  .results-bar { max-width: 1360px; margin: 22px auto 10px; padding: 0 48px; font-size: 0.8rem; color: var(--text-muted); }
+  #result-count { color: var(--text); font-weight: 600; }
+
+  /* ── GRID ── */
+  .cards-grid { max-width: 1360px; margin: 0 auto; padding: 0 48px 80px; display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 22px; }
+
+  /* ── CARD ── */
+  .cc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  }
+  .cc-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); border-color: rgba(108,99,255,0.4); }
+
+  /* ── CARD ART ── */
+  .card-art {
+    position: relative;
+    height: 152px;
+    padding: 18px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  /* Decorative circle overlays */
+  .card-art::before {
+    content: '';
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    right: -60px; top: -80px;
+    background: rgba(255,255,255,0.055);
+    pointer-events: none;
+  }
+  .card-art::after {
+    content: '';
+    position: absolute;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    right: 40px; bottom: -70px;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+  .art-top { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 2; }
+  .chip {
+    width: 34px; height: 26px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #c8a020 0%, #f0d060 40%, #c8a020 70%, #a07010 100%);
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .chip::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(0,0,0,0.25); transform: translateY(-50%); }
+  .chip::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(0,0,0,0.25); transform: translateX(-50%); }
+  .editor-pick-ribbon {
+    background: linear-gradient(90deg, #f4c430, #ffaa00);
+    color: #000;
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(244,196,48,0.4);
+    white-space: nowrap;
+    position: relative; z-index: 2;
+  }
+  .art-bottom { display: flex; align-items: flex-end; justify-content: space-between; position: relative; z-index: 2; }
+  .art-card-name { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.92); text-shadow: 0 1px 3px rgba(0,0,0,0.5); line-height: 1.25; max-width: 200px; }
+  .art-card-issuer { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+  .art-network { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; color: rgba(255,255,255,0.7); text-transform: uppercase; }
+  .art-dots { font-size: 0.72rem; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; margin-top: 4px; }
+
+  /* ── CARD BODY ── */
+  .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+
+  /* Category + name row */
+  .body-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cat-pill { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; letter-spacing: 0.04em; text-transform: uppercase; }
+  .cat-business { background: rgba(249,115,22,0.13); color: #fb8540; border: 1px solid rgba(249,115,22,0.28); }
+  .cat-family { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.28); }
+  .cat-luxury { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.28); }
+  .currency-tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .currency-amex { background: rgba(100,160,255,0.1); color: #7ab4ff; border: 1px solid rgba(100,160,255,0.22); }
+  .currency-chase { background: rgba(0,212,170,0.1); color: var(--accent2); border: 1px solid rgba(0,212,170,0.22); }
+  .currency-capital-one { background: rgba(244,196,48,0.1); color: var(--gold); border: 1px solid rgba(244,196,48,0.22); }
+  .currency-citi { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.22); }
+  .currency-bilt { background: rgba(168,85,247,0.1); color: var(--purple); border: 1px solid rgba(168,85,247,0.22); }
+  .currency-cash { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.22); }
+  .currency-hotel { background: rgba(249,115,22,0.1); color: var(--orange); border: 1px solid rgba(249,115,22,0.22); }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--surface2); border-radius: 9px; padding: 9px 10px; text-align: center; }
+  .stat-value { font-size: 0.92rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.green { color: #4ade80; }
+  .stat-label { font-size: 0.63rem; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-net { font-size: 0.7rem; font-weight: 700; color: var(--green); margin-top: 2px; }
+  .stat-net-note { font-size: 0.62rem; color: var(--text-muted); margin-top: 1px; line-height: 1.3; }
+  .spend-req { font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: -6px; }
+
+  /* Earn rates */
+  .section-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; }
+  .earn-list { display: flex; flex-direction: column; gap: 4px; }
+  .earn-row { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+  .earn-cat { font-size: 0.8rem; color: var(--text-muted); flex: 1; line-height: 1.3; }
+  .earn-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .earn-rate { font-size: 0.88rem; font-weight: 800; color: var(--accent2); }
+  .earn-cap { font-size: 0.68rem; color: var(--text-muted); }
+
+  /* Perks */
+  .perks-list { display: flex; flex-direction: column; gap: 4px; }
+  .perk { font-size: 0.8rem; color: var(--text); display: flex; gap: 7px; line-height: 1.35; }
+  .perk-dot { color: var(--accent); font-size: 0.55rem; margin-top: 4px; flex-shrink: 0; }
+
+  /* Ideal for */
+  .ideal-box { background: var(--surface2); border-radius: 9px; padding: 9px 13px; border-left: 3px solid var(--accent2); }
+  .ideal-label { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); font-weight: 700; margin-bottom: 3px; }
+  .ideal-text { font-size: 0.8rem; color: var(--text); line-height: 1.4; }
+
+  /* ── EMPTY ── */
+  .empty { grid-column: 1/-1; text-align: center; padding: 80px 20px; color: var(--text-muted); font-size: 0.95rem; }
+
+  /* ── FOOTER NOTE ── */
+  .footer-note { max-width: 1360px; margin: 0 auto; padding: 0 48px 32px; }
+  .footer-note-inner { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 10px; align-items: flex-start; }
+  .footer-note-inner strong { color: var(--accent); white-space: nowrap; }
+
+  @media (max-width: 680px) {
+    header, .controls, .results-bar, .cards-grid, .footer-note { padding-left: 16px; padding-right: 16px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .header-meta { display: none; }
+    header { padding: 20px 16px; }
+    .controls { padding: 12px 16px; }
+    .sort-wrap { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>Credit Card <span>Knowledge Base</span></h1>
+      <p>Best-in-class cards for businesses maximizing ad spend &amp; supplies, and families chasing travel rewards. Updated May 2026.</p>
+    </div>
+    <div class="header-meta">
+      <div class="updated-badge">✦ May 2026 Edition</div>
+      <div class="card-count" id="total-count"></div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Search cards, perks, airlines…">
+    </div>
+    <div class="divider"></div>
+    <div class="filter-scroll" id="filters">
+      <button class="pill active" data-filter="all">All Cards</button>
+      <button class="pill" data-filter="business">💼 Business</button>
+      <button class="pill" data-filter="family">✈️ Family Travel</button>
+      <button class="pill" data-filter="luxury">💎 Luxury / Transfer</button>
+      <button class="pill" data-filter="no-fee">$0 Annual Fee</button>
+      <button class="pill" data-filter="lounge">Lounge Access</button>
+      <button class="pill" data-filter="ad-spend">Best for Ad Spend</button>
+      <button class="pill" data-filter="hotel">Best Hotel Cards</button>
+      <button class="pill" data-filter="delta">Delta Flyers</button>
+      <button class="pill" data-filter="picks">⭐ Editor's Picks</button>
+    </div>
+    <div class="sort-wrap">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="default">Default</option>
+        <option value="fee-asc">Fee ↑</option>
+        <option value="fee-desc">Fee ↓</option>
+        <option value="bonus-desc">Bonus Value ↓</option>
+        <option value="name-asc">A – Z</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="results-bar"><span id="result-count">0</span> cards shown</div>
+
+<div class="cards-grid" id="grid"></div>
+
+<div class="footer-note">
+  <div class="footer-note-inner">
+    <strong>🛠 To update:</strong> Open this file in any text editor, find <code>const CARDS = [...]</code> in the &lt;script&gt; section, and edit values directly. No coding required — just save and refresh.
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  EDIT DATA HERE — update when rates/fees/bonuses change
+// ═══════════════════════════════════════════════════════════
+const CARDS = [
+
+  // ─── BUSINESS ──────────────────────────────────────────
+
+  {
+    name: "Amex Business Gold",
+    issuer: "American Express",
+    category: "business",
+    gradient: "linear-gradient(135deg, #7a5200 0%, #c98f10 45%, #8a6000 80%, #5a3c00 100%)",
+    network: "AMEX",
+    editorPick: "Best for Ad Spend",
+    tags: ["business","ad-spend","ads","picks","office supplies","shipping","google ads","facebook ads","meta ads"],
+    annualFee: 375,
+    netFee: "~$135", netFeeNote: "after $240 office/FedEx/Grubhub credits",
+    signupBonus: "100,000 MR pts",
+    signupSpend: "$10k in 3 mo",
+    signupValue: "$2,000",
+    currency: "amex",
+    currencyLabel: "Amex Membership Rewards",
+    pointValue: "~2¢/pt",
+    earnRates: [
+      { cat: "Top 2 spend categories (ads, supplies, shipping, tech, gas…)", rate: "4x", cap: "Cap $150k/yr" },
+      { cat: "Flights & hotels via Amex Travel", rate: "3x", cap: "" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "$240/yr FedEx, Grubhub & office supply credits",
+      "$300/yr ChatGPT Business credit",
+      "$150/yr Squarespace credit",
+      "No foreign transaction fees",
+    ],
+    idealFor: "Businesses spending on ads (Google/Meta), office supplies, shipping, or software — earns 4x automatically on your top two categories.",
+  },
+
+  {
+    name: "Chase Ink Business Preferred",
+    issuer: "Chase",
+    category: "business",
+    gradient: "linear-gradient(135deg, #00113e 0%, #003087 55%, #001a5a 100%)",
+    network: "VISA",
+    editorPick: "Best Business Value",
+    tags: ["business","ad-spend","picks","ads","shipping","internet","google ads","facebook ads","travel"],
+    annualFee: 95,
+    netFee: "$95", netFeeNote: "no annual credits to offset",
+    signupBonus: "100,000 UR pts",
+    signupSpend: "$8k in 3 mo",
+    signupValue: "$2,050",
+    currency: "chase",
+    currencyLabel: "Chase Ultimate Rewards",
+    pointValue: "~2.05¢/pt",
+    earnRates: [
+      { cat: "Ads (search engines & social media), shipping, internet/cable/phone, travel", rate: "3x", cap: "Cap $150k/yr" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "Cell phone protection up to $1,000/claim",
+      "No foreign transaction fees",
+      "Employee cards at no extra cost",
+      "Primary rental car insurance",
+    ],
+    idealFor: "The best value business card — broad 3x categories, only $95/yr, and a $2,050 sign-up bonus.",
+  },
+
+  {
+    name: "Chase Ink Business Cash",
+    issuer: "Chase",
+    category: "business",
+    gradient: "linear-gradient(135deg, #003087 0%, #1a5cb0 50%, #003c8f 100%)",
+    network: "VISA",
+    editorPick: "Best No-Fee Business",
+    tags: ["business","no-fee","office supplies","internet","cable","phone","gas"],
+    annualFee: 0,
+    netFee: "$0", netFeeNote: "no annual fee ever",
+    signupBonus: "75,000 UR pts",
+    signupSpend: "$6k in 3 mo",
+    signupValue: "$750",
+    currency: "chase",
+    currencyLabel: "Chase Ultimate Rewards",
+    pointValue: "~2.05¢/pt",
+    earnRates: [
+      { cat: "Office supply stores & internet/cable/phone", rate: "5x", cap: "Cap $25k/yr" },
+      { cat: "Gas stations & restaurants", rate: "2x", cap: "Cap $25k/yr" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "No annual fee — keeps earning forever",
+      "Pairs with Ink Preferred or Sapphire to unlock 2¢/pt redemptions",
+      "Purchase protection & extended warranty",
+      "Employee cards at no extra cost",
+    ],
+    idealFor: "Small businesses with office supply or phone/internet bills — and an excellent companion card to maximize Chase points.",
+  },
+
+  {
+    name: "Amex Blue Business Plus",
+    issuer: "American Express",
+    category: "business",
+    gradient: "linear-gradient(135deg, #004a9f 0%, #0066cc 50%, #003a8a 100%)",
+    network: "AMEX",
+    tags: ["business","no-fee","flat rate","simple"],
+    annualFee: 0,
+    netFee: "$0", netFeeNote: "no annual fee ever",
+    signupBonus: "15,000 MR pts",
+    signupSpend: "$3k in 3 mo",
+    signupValue: "$300",
+    currency: "amex",
+    currencyLabel: "Amex Membership Rewards",
+    pointValue: "~2¢/pt",
+    earnRates: [
+      { cat: "All purchases — no category tracking", rate: "2x", cap: "Cap $50k/yr, then 1x" },
+      { cat: "Everything over $50k", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "No annual fee",
+      "Zero category management — just use it",
+      "Extended warranty on eligible purchases",
+      "Purchase protection up to $1,000/item",
+    ],
+    idealFor: "Businesses that want simple, guaranteed Membership Rewards earnings without tracking categories — or managing an annual fee.",
+  },
+
+  {
+    name: "Capital One Spark Cash Plus",
+    issuer: "Capital One",
+    category: "business",
+    gradient: "linear-gradient(135deg, #8b0000 0%, #cc1100 45%, #900000 100%)",
+    network: "MASTERCARD",
+    tags: ["business","cash back","flat rate","high spend","unlimited"],
+    annualFee: 150,
+    netFee: "~$0", netFeeNote: "fee refunded if you spend $150k+/yr",
+    signupBonus: "$1,200 cash back",
+    signupSpend: "$30k in 3 mo",
+    signupValue: "$1,200",
+    currency: "cash",
+    currencyLabel: "Cash Back",
+    pointValue: "1¢/pt (cash)",
+    earnRates: [
+      { cat: "All purchases — no caps, no categories", rate: "2%", cap: "" },
+      { cat: "Hotels & rental cars via Capital One Travel", rate: "5%", cap: "" },
+    ],
+    perks: [
+      "Annual fee refunded if you spend $150k+/yr",
+      "No preset spending limit (charge card)",
+      "Free employee cards with 5% rewards",
+      "No foreign transaction fees",
+    ],
+    idealFor: "High-volume businesses ($150k+/yr spend) that want dead-simple cash back with no spending caps.",
+  },
+
+  {
+    name: "Chase Sapphire Reserve Business",
+    issuer: "Chase",
+    category: "business",
+    gradient: "linear-gradient(135deg, #080f22 0%, #0d1f40 50%, #102050 100%)",
+    network: "VISA",
+    editorPick: "Best Uncapped 3x on Ads",
+    tags: ["business","ad-spend","ads","lounge","travel","shipping","dining","premium"],
+    annualFee: 695,
+    netFee: "~$395", netFeeNote: "after $300 travel credit",
+    signupBonus: "150,000 UR pts",
+    signupSpend: "$20k in 3 mo",
+    signupValue: "$3,075",
+    currency: "chase",
+    currencyLabel: "Chase Ultimate Rewards",
+    pointValue: "~2.05¢/pt",
+    earnRates: [
+      { cat: "Ads (search & social media)", rate: "3x", cap: "No cap" },
+      { cat: "Travel, dining, shipping, internet/cable/phone", rate: "3x", cap: "No cap" },
+      { cat: "Chase Travel portal", rate: "10x", cap: "" },
+    ],
+    perks: [
+      "$300 annual travel credit (broad category)",
+      "Priority Pass & Chase Sapphire Lounge access",
+      "Global Entry / TSA PreCheck credit",
+      "Primary rental car insurance",
+      "No foreign transaction fees",
+    ],
+    idealFor: "High-spend businesses needing uncapped 3x on ads — the Ink Preferred's $150k cap isn't a constraint here.",
+  },
+
+  // ─── FAMILY TRAVEL ─────────────────────────────────────
+
+  {
+    name: "Chase Sapphire Preferred",
+    issuer: "Chase",
+    category: "family",
+    gradient: "linear-gradient(135deg, #0a2060 0%, #1a4090 55%, #0d2870 100%)",
+    network: "VISA",
+    editorPick: "Best Starter Travel Card",
+    tags: ["family","picks","travel","dining","transfer","hyatt","united","southwest","hotel"],
+    annualFee: 95,
+    netFee: "~$45", netFeeNote: "after $50 annual hotel credit",
+    signupBonus: "75,000 UR pts",
+    signupSpend: "$5k in 3 mo",
+    signupValue: "$1,537",
+    currency: "chase",
+    currencyLabel: "Chase Ultimate Rewards",
+    pointValue: "~2.05¢/pt",
+    earnRates: [
+      { cat: "Travel (Chase Travel portal)", rate: "5x", cap: "" },
+      { cat: "Dining, online grocery & streaming", rate: "3x", cap: "" },
+      { cat: "Travel (direct)", rate: "2x", cap: "" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "$50/yr hotel credit via Chase Travel",
+      "10% anniversary points bonus on all spending",
+      "Primary rental car insurance",
+      "Trip delay & cancellation insurance",
+      "Transfer to Hyatt, United, Southwest, BA, Singapore Air, Marriott + more",
+    ],
+    idealFor: "The best entry-level travel card — low fee, access to the Chase ecosystem (Hyatt is gold), and a $1,500+ sign-up bonus.",
+  },
+
+  {
+    name: "Chase Sapphire Reserve",
+    issuer: "Chase",
+    category: "family",
+    gradient: "linear-gradient(135deg, #060e20 0%, #0e2040 45%, #0a1a38 100%)",
+    network: "VISA",
+    editorPick: "Best for Families",
+    tags: ["family","luxury","picks","travel","lounge","dining","transfer","hyatt","hotel","premium"],
+    annualFee: 795,
+    netFee: "~$495", netFeeNote: "after $300 travel credit",
+    signupBonus: "150,000 UR pts",
+    signupSpend: "$6k in 3 mo",
+    signupValue: "$3,075",
+    currency: "chase",
+    currencyLabel: "Chase Ultimate Rewards",
+    pointValue: "~2.05¢/pt",
+    earnRates: [
+      { cat: "Chase Travel portal bookings", rate: "8x", cap: "" },
+      { cat: "Flights & hotels via Chase Travel", rate: "5x", cap: "" },
+      { cat: "Dining worldwide", rate: "4x", cap: "" },
+      { cat: "Streaming services", rate: "3x", cap: "" },
+    ],
+    perks: [
+      "$300 annual travel credit (auto-applies to almost all travel)",
+      "Priority Pass + Chase Sapphire Lounges (+ 2 guests free)",
+      "Global Entry / TSA PreCheck",
+      "Best-in-class trip, medical & baggage insurance",
+      "Lyft Pink All Access membership",
+    ],
+    idealFor: "Frequent-traveling families — $300 travel credit + 2 free lounge guests + elite trip protection make the $795 fee very manageable.",
+  },
+
+  {
+    name: "Capital One Venture X",
+    issuer: "Capital One",
+    category: "family",
+    gradient: "linear-gradient(135deg, #100830 0%, #2a1260 50%, #100830 100%)",
+    network: "VISA",
+    editorPick: "Best Value Premium",
+    tags: ["family","luxury","picks","travel","lounge","hotel","transfer","flat rate","rental car"],
+    annualFee: 395,
+    netFee: "~$0", netFeeNote: "after $300 travel + $185 anniversary miles",
+    signupBonus: "75,000 miles",
+    signupSpend: "$4k in 3 mo",
+    signupValue: "$1,387",
+    currency: "capital-one",
+    currencyLabel: "Capital One Miles",
+    pointValue: "~1.85¢/mi",
+    earnRates: [
+      { cat: "Hotels & rental cars via Capital One Travel", rate: "10x", cap: "" },
+      { cat: "Flights via Capital One Travel", rate: "5x", cap: "" },
+      { cat: "All other purchases", rate: "2x", cap: "" },
+    ],
+    perks: [
+      "$300 annual travel credit + 10k anniversary miles = fee nearly covered",
+      "Priority Pass + Capital One Lounges",
+      "Global Entry / TSA PreCheck",
+      "Primary rental car insurance",
+      "Cell phone protection",
+      "Note: guest lounge access removed Feb 2026 (cardholder only now)",
+    ],
+    idealFor: "Families wanting a premium card where the credits cover the fee — net cost is roughly $0 after the $300 credit + anniversary miles.",
+  },
+
+  {
+    name: "American Express Platinum",
+    issuer: "American Express",
+    category: "family",
+    gradient: "linear-gradient(135deg, #222228 0%, #4a4a54 45%, #1c1c24 100%)",
+    network: "AMEX",
+    editorPick: "Most Transfer Partners",
+    tags: ["family","luxury","picks","travel","lounge","hotel","airline","premium","centurion","transfer"],
+    annualFee: 895,
+    netFee: "~$0", netFeeNote: "if $1,400+ in credits fully used",
+    signupBonus: "Up to 175,000 MR pts",
+    signupSpend: "$12k in 6 mo (targeted)",
+    signupValue: "$3,500+",
+    currency: "amex",
+    currencyLabel: "Amex Membership Rewards",
+    pointValue: "~2¢/pt",
+    earnRates: [
+      { cat: "Flights (direct airlines or Amex Travel)", rate: "5x", cap: "Cap $500k/yr" },
+      { cat: "Hotels prepaid via Amex Travel", rate: "5x", cap: "" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "Centurion Lounge + Priority Pass Select (1,300+ lounges)",
+      "$200/yr airline fee credit (incidentals)",
+      "$300/yr Fine Hotels + Resorts hotel credit",
+      "$400/yr Resy dining credit",
+      "$300/yr digital entertainment credit",
+      "$209/yr CLEAR+ credit",
+      "20 airline & hotel transfer partners",
+    ],
+    idealFor: "Premium travelers who can maximize monthly credits — potential $3,500+ in annual value against the $895 fee.",
+  },
+
+  {
+    name: "World of Hyatt Credit Card",
+    issuer: "Chase",
+    category: "family",
+    gradient: "linear-gradient(135deg, #0a2818 0%, #143820 50%, #0a2818 100%)",
+    network: "VISA",
+    editorPick: "Best Hotel Card",
+    tags: ["family","hotel","picks","hyatt","free night","travel","luxury"],
+    annualFee: 95,
+    netFee: "~$0", netFeeNote: "after free annual night (~$150+ value)",
+    signupBonus: "30,000 pts + 2 free nights",
+    signupSpend: "$3k in 3 mo",
+    signupValue: "$600+",
+    currency: "hotel",
+    currencyLabel: "World of Hyatt Points",
+    pointValue: "~1.8¢/pt",
+    earnRates: [
+      { cat: "Hyatt hotels (with Discoverist status)", rate: "9x", cap: "(4x card + 5x status)" },
+      { cat: "Dining, gyms, fitness clubs", rate: "2x", cap: "" },
+      { cat: "Airlines (direct), local transit, gas", rate: "2x", cap: "" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "Free Category 1–4 night every cardmember year",
+      "Automatic Discoverist elite status",
+      "Earn 1 qualifying night per $5k spent",
+      "Best luxury hotel redemptions in the industry",
+    ],
+    idealFor: "Families who frequently stay at Hyatt — free annual night + elite status for $95/yr is outstanding value.",
+  },
+
+  {
+    name: "Bilt Palladium Card",
+    issuer: "Wells Fargo / Bilt",
+    category: "family",
+    gradient: "linear-gradient(135deg, #08080e 0%, #14102a 50%, #08080e 100%)",
+    network: "MASTERCARD",
+    editorPick: "Most Unique Pick",
+    tags: ["family","picks","rent","mortgage","travel","dining","transfer","unique"],
+    annualFee: 550,
+    netFee: "Varies", netFeeNote: "value comes from earning on rent/mortgage, not credits",
+    signupBonus: "None",
+    signupSpend: "N/A",
+    signupValue: "Ongoing rent/mortgage rewards",
+    currency: "bilt",
+    currencyLabel: "Bilt Rewards Points",
+    pointValue: "~1.5–2¢/pt",
+    earnRates: [
+      { cat: "Rent & mortgage (no processing fee)", rate: "3x", cap: "" },
+      { cat: "Dining", rate: "4x", cap: "" },
+      { cat: "Travel", rate: "3x", cap: "" },
+      { cat: "All other purchases", rate: "2x", cap: "" },
+    ],
+    perks: [
+      "Only card that earns rewards on rent AND mortgage",
+      "Rent Day (1st of month): 2x in all categories",
+      "Transfers to American, United, Alaska, Hyatt, IHG, Marriott + more",
+      "New 2026: earns on mortgage payments",
+    ],
+    idealFor: "Homeowners & renters who want to turn their largest monthly expense into valuable travel points.",
+  },
+
+  // ─── LUXURY / TRANSFER ─────────────────────────────────
+
+  {
+    name: "Chase Sapphire Reserve",
+    issuer: "Chase",
+    category: "luxury",
+    gradient: "linear-gradient(135deg, #060e20 0%, #0e2040 45%, #0a1a38 100%)",
+    network: "VISA",
+    editorPick: "Best Transfer Ecosystem",
+    tags: ["luxury","picks","transfer","hyatt","united","lounge","premium","insurance","hotel"],
+    annualFee: 795,
+    netFee: "~$495", netFeeNote: "after $300 travel credit",
+    signupBonus: "150,000 UR pts",
+    signupSpend: "$6k in 3 mo",
+    signupValue: "$3,075",
+    currency: "chase",
+    currencyLabel: "Chase Ultimate Rewards",
+    pointValue: "~2.05¢/pt (highest rated)",
+    earnRates: [
+      { cat: "Chase Travel portal", rate: "8x", cap: "" },
+      { cat: "Flights & hotels via Chase Travel", rate: "5x", cap: "" },
+      { cat: "Dining worldwide", rate: "4x", cap: "" },
+      { cat: "Streaming services", rate: "3x", cap: "" },
+    ],
+    perks: [
+      "1:1 transfer to Hyatt (best luxury hotel value), United, Southwest, BA, Singapore Air, Virgin",
+      "Chase Sapphire Lounges (growing network) + Priority Pass (2 free guests)",
+      "$300 annual travel credit",
+      "Best-in-class trip cancellation & medical insurance",
+      "Lyft & DoorDash perks",
+    ],
+    idealFor: "Best overall transfer card — the Hyatt and United partnerships alone can deliver extraordinary redemption value.",
+  },
+
+  {
+    name: "American Express Platinum",
+    issuer: "American Express",
+    category: "luxury",
+    gradient: "linear-gradient(135deg, #222228 0%, #4a4a54 45%, #1c1c24 100%)",
+    network: "AMEX",
+    editorPick: "Most Transfer Partners",
+    tags: ["luxury","picks","transfer","centurion lounge","airline","hotel","premium","amex"],
+    annualFee: 895,
+    netFee: "~$0", netFeeNote: "if $1,400+ in credits fully used",
+    signupBonus: "Up to 175,000 MR pts",
+    signupSpend: "$12k in 6 mo (targeted)",
+    signupValue: "$3,500+",
+    currency: "amex",
+    currencyLabel: "Amex Membership Rewards",
+    pointValue: "~2¢/pt",
+    earnRates: [
+      { cat: "Flights (direct or Amex Travel)", rate: "5x", cap: "Cap $500k/yr" },
+      { cat: "Hotels prepaid via Amex Travel", rate: "5x", cap: "" },
+      { cat: "All other purchases", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "20 airline + hotel transfer partners (most of any US program)",
+      "Centurion Lounge + Priority Pass Select worldwide",
+      "Frequent 25–40% transfer bonuses throughout the year",
+      "$895 in credits that can fully offset the fee",
+      "Note: 60¢ excise fee per 1,000 pts for US airline transfers",
+    ],
+    idealFor: "Points maximizers who want the most airline partner options — especially international carriers unavailable elsewhere.",
+  },
+
+  {
+    name: "Citi Strata Premier",
+    issuer: "Citi",
+    category: "luxury",
+    gradient: "linear-gradient(135deg, #003a80 0%, #0056bb 50%, #003060 100%)",
+    network: "MASTERCARD",
+    editorPick: "Best for Delta Flyers",
+    tags: ["luxury","picks","transfer","delta","airline","hotel","dining","low fee","citi"],
+    annualFee: 95,
+    netFee: "~$0", netFeeNote: "after $100 annual hotel savings credit",
+    signupBonus: "70,000 ThankYou pts",
+    signupSpend: "$4k in 3 mo",
+    signupValue: "$1,330",
+    currency: "citi",
+    currencyLabel: "Citi ThankYou Points",
+    pointValue: "~1.9¢/pt",
+    earnRates: [
+      { cat: "Air travel, hotels & restaurants", rate: "3x", cap: "" },
+      { cat: "Supermarkets & gas stations", rate: "3x", cap: "" },
+      { cat: "Everything else", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "$100 annual hotel savings on a $500+ hotel stay",
+      "ONLY major flexible program that transfers to Delta SkyMiles",
+      "15 airline + 5 hotel transfer partners",
+      "No foreign transaction fees",
+    ],
+    idealFor: "Delta flyers who want transferable points — no Amex, Chase, or Capital One transfers to Delta. This is the only way.",
+  },
+
+  {
+    name: "Capital One Venture X",
+    issuer: "Capital One",
+    category: "luxury",
+    gradient: "linear-gradient(135deg, #100830 0%, #2a1260 50%, #100830 100%)",
+    network: "VISA",
+    editorPick: "Best Net-Zero Fee",
+    tags: ["luxury","picks","transfer","flat rate","lounge","travel","hotel","simple"],
+    annualFee: 395,
+    netFee: "~$0", netFeeNote: "after $300 travel + $185 anniversary miles",
+    signupBonus: "75,000 miles",
+    signupSpend: "$4k in 3 mo",
+    signupValue: "$1,387",
+    currency: "capital-one",
+    currencyLabel: "Capital One Miles",
+    pointValue: "~1.85¢/mi",
+    earnRates: [
+      { cat: "Hotels & rental cars via Capital One Travel", rate: "10x", cap: "" },
+      { cat: "Flights via Capital One Travel", rate: "5x", cap: "" },
+      { cat: "All purchases — no category tracking", rate: "2x", cap: "" },
+    ],
+    perks: [
+      "$300 travel credit + 10k anniversary miles ≈ $485 in value vs $395 fee",
+      "Transfer 1:1 to 15+ airline & hotel partners",
+      "Priority Pass + Capital One Lounges",
+      "Simple flat-rate 2x baseline — no spreadsheet needed",
+    ],
+    idealFor: "Those who want a premium transferable-miles card where the annual fee effectively pays for itself every year.",
+  },
+
+  {
+    name: "Bilt Obsidian Card",
+    issuer: "Wells Fargo / Bilt",
+    category: "luxury",
+    gradient: "linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 50%, #0a0a0a 100%)",
+    network: "MASTERCARD",
+    tags: ["luxury","transfer","rent","mortgage","dining","travel","bilt"],
+    annualFee: 95,
+    netFee: "$95", netFeeNote: "value comes from earning on rent/mortgage",
+    signupBonus: "None",
+    signupSpend: "N/A",
+    signupValue: "Rent/mortgage rewards",
+    currency: "bilt",
+    currencyLabel: "Bilt Rewards Points",
+    pointValue: "~1.5–2¢/pt",
+    earnRates: [
+      { cat: "Rent & mortgage (no processing fee)", rate: "2x", cap: "" },
+      { cat: "Dining", rate: "3x", cap: "" },
+      { cat: "Travel", rate: "2x", cap: "" },
+      { cat: "All other purchases", rate: "1x", cap: "" },
+    ],
+    perks: [
+      "Earns on rent and mortgage with zero processing fee",
+      "Transfers to American, United, Alaska, Hyatt, Marriott, IHG + more",
+      "Rent Day 2x bonus on 1st of every month",
+      "Most affordable Bilt card — $95/yr",
+    ],
+    idealFor: "Renters & homeowners who want transferable points on their biggest monthly expense at a low annual fee.",
+  },
+
+];
+// ═══════════════════════════════════════════════════════════
+//  END OF EDITABLE DATA
+// ═══════════════════════════════════════════════════════════
+
+// Dedupe by name + category
+function dedupe(arr) {
+  const seen = new Set();
+  return arr.filter(c => { const k = c.name+'|'+c.category; if(seen.has(k)) return false; seen.add(k); return true; });
+}
+const ALL_CARDS = dedupe(CARDS);
+
+document.getElementById('total-count').textContent = ALL_CARDS.length + ' cards tracked';
+
+const currencyClass = { amex:'currency-amex', chase:'currency-chase', 'capital-one':'currency-capital-one', citi:'currency-citi', bilt:'currency-bilt', cash:'currency-cash', hotel:'currency-hotel' };
+const catLabel = { business:'💼 Business', family:'✈️ Family Travel', luxury:'💎 Luxury / Transfer' };
+const catClass = { business:'cat-business', family:'cat-family', luxury:'cat-luxury' };
+
+// Use-case filter logic
+const filterMatch = {
+  all:       c => true,
+  business:  c => c.category === 'business',
+  family:    c => c.category === 'family',
+  luxury:    c => c.category === 'luxury',
+  'no-fee':  c => c.annualFee === 0,
+  lounge:    c => c.tags.some(t => ['lounge','centurion lounge','centurion'].includes(t)),
+  'ad-spend':c => c.tags.includes('ad-spend'),
+  hotel:     c => c.tags.some(t => ['hotel','hyatt','hotel picks'].includes(t)),
+  delta:     c => c.tags.includes('delta'),
+  picks:     c => !!c.editorPick,
+};
+
+let activeFilter = 'all';
+let searchQuery = '';
+let sortMode = 'default';
+
+function getFiltered() {
+  let cards = ALL_CARDS.filter(c => {
+    if (!filterMatch[activeFilter](c)) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const blob = [c.name, c.issuer, c.category, c.currencyLabel, c.idealFor, c.editorPick||'', ...(c.tags||[]), ...c.perks, ...c.earnRates.map(e=>e.cat)].join(' ').toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  });
+  if (sortMode === 'fee-asc')    cards.sort((a,b) => a.annualFee - b.annualFee);
+  if (sortMode === 'fee-desc')   cards.sort((a,b) => b.annualFee - a.annualFee);
+  if (sortMode === 'name-asc')   cards.sort((a,b) => a.name.localeCompare(b.name));
+  if (sortMode === 'bonus-desc') cards.sort((a,b) => {
+    const n = s => parseInt((s||'').replace(/[^0-9]/g,'')) || 0;
+    return n(b.signupValue) - n(a.signupValue);
+  });
+  return cards;
+}
+
+function renderCard(c) {
+  return `
+<div class="cc-card">
+  <div class="card-art" style="background:${c.gradient}">
+    <div class="art-top">
+      <div class="chip"></div>
+      ${c.editorPick ? `<div class="editor-pick-ribbon">⭐ ${c.editorPick}</div>` : ''}
+    </div>
+    <div class="art-bottom">
+      <div>
+        <div class="art-card-name">${c.name}</div>
+        <div class="art-card-issuer">${c.issuer}</div>
+        <div class="art-dots">•••• •••• •••• 4242</div>
+      </div>
+      <div class="art-network">${c.network}</div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="body-header">
+      <span class="cat-pill ${catClass[c.category]}">${catLabel[c.category]}</span>
+      <span class="currency-tag ${currencyClass[c.currency]}">${c.currencyLabel}</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-value">${c.annualFee === 0 ? '$0' : '$'+c.annualFee}</div>
+        <div class="stat-label">Annual Fee</div>
+        ${c.netFee !== undefined ? `<div class="stat-net">Net ${c.netFee}</div><div class="stat-net-note">${c.netFeeNote}</div>` : ''}
+      </div>
+      <div class="stat">
+        <div class="stat-value green">${c.signupBonus}</div>
+        <div class="stat-label">Sign-up Bonus</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value gold">${c.signupValue}</div>
+        <div class="stat-label">Bonus Value</div>
+      </div>
+    </div>
+    ${c.signupSpend !== 'N/A' ? `<div class="spend-req">Spend requirement: ${c.signupSpend}</div>` : ''}
+
+    <div>
+      <div class="section-label">Earn Rates</div>
+      <div class="earn-list">
+        ${c.earnRates.map(e=>`
+          <div class="earn-row">
+            <span class="earn-cat">${e.cat}</span>
+            <div class="earn-right">
+              <span class="earn-rate">${e.rate}</span>
+              ${e.cap ? `<span class="earn-cap">${e.cap}</span>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Key Perks</div>
+      <div class="perks-list">
+        ${c.perks.map(p=>`<div class="perk"><span class="perk-dot">◆</span>${p}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="ideal-box">
+      <div class="ideal-label">Ideal for</div>
+      <div class="ideal-text">${c.idealFor}</div>
+    </div>
+  </div>
+</div>`;
+}
+
+function render() {
+  const cards = getFiltered();
+  document.getElementById('result-count').textContent = cards.length;
+  const grid = document.getElementById('grid');
+  grid.innerHTML = cards.length
+    ? cards.map(renderCard).join('')
+    : `<div class="empty">No cards match your filters — try adjusting the search or filter.</div>`;
+}
+
+document.querySelectorAll('.pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+document.getElementById('search').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  render();
+});
+document.getElementById('sort').addEventListener('change', e => {
+  sortMode = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
